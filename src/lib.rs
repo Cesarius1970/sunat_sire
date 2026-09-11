@@ -6,55 +6,134 @@
 //! Cliente y utilidades de alto rendimiento para la integración con los servicios web
 //! del **Sistema Integrado de Registros Electrónicos (SIRE)** de la **SUNAT** (Perú).
 //!
-//! ## Arquitectura y Módulos Previstos
+//! Proporciona soporte integral tanto para la **generación e inspección offline** de archivos
+//! planos (`.txt`/`.zip` con hash SHA-256) como para la **interacción en línea con el API REST**
+//! oficial (autenticación OAuth 2.0 Clave SOL, consultas, propuestas y sondeo de tickets).
 //!
-//! La arquitectura de la librería está diseñada para garantizar seguridad de tipos en tiempo
-//! de compilación, ejecución asíncrona no bloqueante (Tokio) y cero costos innecesarios de clonación:
+//! ## Estructura de Módulos
 //!
-//! - **Autenticación (`auth`):** Gestión de credenciales Clave SOL y Client ID/Secret para la
-//!   obtención y refresco de tokens OAuth 2.0 de SUNAT.
-//! - **Cliente HTTP (`client`):** Cliente asíncrono con soporte de reintentos, backoff exponencial
-//!   y trazabilidad estructurada (`tracing`).
-//! - **Modelos de Dominio (`models`):** Estructuras para RCE (Registro de Compras Electrónico) y
-//!   RVIE (Registro de Ventas e Ingresos Electrónico), esquemas de propuestas, tickets y resúmenes.
-//! - **Manejo de Errores (`error`):** Jerarquía de errores tipados basada en `thiserror`.
-//!
-//! ## Directrices de Implementación
-//!
-//! - **Rendimiento:** Priorización de referencias prestadas (`&str`, `&[u8]`) sobre asignaciones en memoria.
-//! - **Concurrencia:** Diseño asíncrono compatible con Tokio sin bloqueo de hilos de trabajo.
-//! - **Estándares:** Apego riguroso a las especificaciones técnicas de los servicios API REST del SIRE.
+//! - [`sire_autenticacion`]: Gestión de credenciales Clave SOL, ambientes y tokens Bearer en memoria con auto-refresco asíncrono.
+//! - [`sire_cliente`]: Cliente HTTP asíncrono sobre Reqwest/Tokio con inyección de cabeceras y control de reintentos.
+//! - [`sire_catalogos`]: Catálogos normalizados de SUNAT (tipos de documentos, comprobantes, monedas, afectaciones IGV y estados).
+//! - [`sire_rvie`]: Registro de Ventas e Ingresos Electrónico (modelos con `rust_decimal::Decimal`, generador plano, empaquetador ZIP y API).
+//! - [`sire_rce`]: Registro de Compras Electrónico (compras nacionales, casillas de crédito fiscal en `Decimal` y servicios API).
+//! - [`sire_tickets`]: Monitoreo de procesos en segundo plano de SUNAT mediante sondeos asíncronos (*polling*) no bloqueantes.
+//! - [`sire_errores`]: Jerarquía fuertemente tipada de errores basada en `thiserror`.
 
 #![warn(missing_docs)]
 
-/// Función de verificación básica del crate.
-///
-/// # Parámetros
-/// - `left`: Primer operando entero de 64 bits sin signo.
-/// - `right`: Segundo operando entero de 64 bits sin signo.
-///
-/// # Retorno
-/// Retorna la suma aritmética de ambos operandos.
-///
-/// # Ejemplos
-/// ```
-/// use sunat_sire::add;
-///
-/// let resultado = add(10, 20);
-/// assert_eq!(resultado, 30);
-/// ```
-pub fn add(left: u64, right: u64) -> u64 {
-    // Implementación aritmética directa libre de desbordamientos indeseados en casos estándar.
-    left + right
-}
+pub mod sire_autenticacion;
+pub mod sire_catalogos;
+pub mod sire_cliente;
+pub mod sire_errores;
+pub mod sire_rce;
+pub mod sire_rvie;
+pub mod sire_tickets;
+
+// Re-exportaciones de conveniencia para la raíz del crate
+pub use sire_autenticacion::{SireAmbiente, SireCredenciales, SireGestorToken, SireToken};
+pub use sire_cliente::{SireCliente, SireConfiguracion};
+pub use sire_errores::{SireError, SireResultado};
+pub use sire_rce::{SireComprobanteCompra, sire_empaquetar_zip_rce, sire_generar_archivo_plano_rce};
+pub use sire_rvie::{SireComprobanteVenta, sire_empaquetar_zip_rvie, sire_generar_archivo_plano_rvie};
+pub use sire_tickets::{SireArchivoRespuesta, SireTicket, sire_consultar_ticket, sire_esperar_ticket};
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rust_decimal_macros::dec;
 
     #[test]
-    fn add_debe_retornar_suma_correcta_cuando_recibe_dos_numeros() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn rvie_debe_generar_archivo_plano_y_zip_con_sha256_valido() {
+        let comprobante = SireComprobanteVenta {
+            periodo: "202609".to_string(),
+            car: Some("2060000000101F00100000001".to_string()),
+            fecha_emision: "2026-09-01".to_string(),
+            fecha_vencimiento: None,
+            tipo_comprobante: sire_catalogos::SireCatalogo02TipoComprobante::Factura,
+            serie: "F001".to_string(),
+            numero: "00000001".to_string(),
+            tipo_doc_cliente: sire_catalogos::SireCatalogo01TipoDocumentoIdentidad::Ruc,
+            num_doc_cliente: "20123456789".to_string(),
+            razon_social_cliente: "EMPRESA CLIENTE S.A.C.".to_string(),
+            valor_exportacion: dec!(0.00),
+            base_imponible_gravada: dec!(1000.00),
+            descuento_base_imponible: dec!(0.00),
+            monto_igv: dec!(180.00),
+            descuento_igv: dec!(0.00),
+            monto_exonerado: dec!(0.00),
+            monto_inafecto: dec!(0.00),
+            monto_isc: dec!(0.00),
+            base_imponible_ivap: dec!(0.00),
+            monto_ivap: dec!(0.00),
+            monto_icbper: dec!(0.00),
+            otros_tributos: dec!(0.00),
+            importe_total: dec!(1180.00),
+            moneda: sire_catalogos::SireCatalogo03Moneda::Pen,
+            tipo_cambio: None,
+            tipo_comprobante_modificado: None,
+            serie_modificada: None,
+            numero_modificado: None,
+        };
+
+        let comprobantes = vec![comprobante];
+        let plano = sire_generar_archivo_plano_rvie(&comprobantes);
+        assert!(plano.contains("2060000000101F00100000001"));
+        assert!(plano.contains("|1000.00|0.00|180.00|"));
+        assert!(plano.contains("|1180.00|PEN|"));
+
+        let (nombre_zip, bytes_zip, hash_sha256) =
+            sire_empaquetar_zip_rvie("20600000001", "202609", &plano).expect("Error al empaquetar ZIP");
+
+        assert!(nombre_zip.starts_with("LE2060000000120260900140400021112.zip"));
+        assert!(!bytes_zip.is_empty());
+        assert_eq!(hash_sha256.len(), 64); // SHA-256 son 64 caracteres hexadecimales
+    }
+
+    #[test]
+    fn rce_debe_generar_archivo_plano_y_zip_con_sha256_valido() {
+        let compra = SireComprobanteCompra {
+            periodo: "202609".to_string(),
+            car: Some("2012345678901F00100000050".to_string()),
+            fecha_emision: "2026-09-02".to_string(),
+            fecha_vencimiento: None,
+            tipo_comprobante: sire_catalogos::SireCatalogo02TipoComprobante::Factura,
+            serie: "F001".to_string(),
+            numero: "00000050".to_string(),
+            tipo_doc_proveedor: sire_catalogos::SireCatalogo01TipoDocumentoIdentidad::Ruc,
+            num_doc_proveedor: "20987654321".to_string(),
+            razon_social_proveedor: "PROVEEDOR INDUSTRIAL S.A.C.".to_string(),
+            bi_gravada_dg: dec!(500.00),
+            igv_dg: dec!(90.00),
+            bi_gravada_dng: dec!(0.00),
+            igv_dng: dec!(0.00),
+            bi_gravada_dsg: dec!(0.00),
+            igv_dsg: dec!(0.00),
+            adquisiciones_no_gravadas: dec!(0.00),
+            monto_isc: dec!(0.00),
+            monto_icbper: dec!(0.00),
+            otros_tributos: dec!(0.00),
+            importe_total: dec!(590.00),
+            moneda: sire_catalogos::SireCatalogo03Moneda::Pen,
+            tipo_cambio: None,
+            tipo_comprobante_modificado: None,
+            serie_modificada: None,
+            numero_modificado: None,
+            constancia_detraccion: None,
+            fecha_detraccion: None,
+        };
+
+        let compras = vec![compra];
+        let plano = sire_generar_archivo_plano_rce(&compras);
+        assert!(plano.contains("2012345678901F00100000050"));
+        assert!(plano.contains("|500.00|90.00|"));
+        assert!(plano.contains("|590.00|PEN|"));
+
+        let (nombre_zip, bytes_zip, hash_sha256) =
+            sire_empaquetar_zip_rce("20600000001", "202609", &plano).expect("Error al empaquetar ZIP");
+
+        assert!(nombre_zip.starts_with("LE2060000000120260900080400021112.zip"));
+        assert!(!bytes_zip.is_empty());
+        assert_eq!(hash_sha256.len(), 64);
     }
 }
