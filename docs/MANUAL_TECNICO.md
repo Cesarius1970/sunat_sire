@@ -65,34 +65,58 @@ sunat_sire/
 ├── LICENSE-APACHE              # Términos de licencia Apache 2.0
 ├── README.md                   # Documentación general y presentación
 ├── docs/
-│   ├── MANUAL_TECNICO.md       # Este documento (arquitectura y manual técnico)
+│   ├── MANUAL_TECNICO.md       # Arquitectura y manual técnico
 │   └── histórico/
 │       └── HISTORICO_SOLICITUDES.md # Registro cronológico de solicitudes y respuestas
 └── src/
-    ├── lib.rs                  # Raíz del crate, exportación pública y rustdoc general
-    ├── auth/                   # Gestión de tokens OAuth 2.0 con SUNAT (Clave SOL)
-    ├── client/                 # Cliente HTTP asíncrono sobre Reqwest/Tokio
-    ├── error/                  # Definición jerárquica de errores con thiserror
-    └── models/                 # Modelos de datos RCE, RVIE, tickets y propuestas
+    ├── lib.rs                  # Raíz del crate, exportación pública y rustdoc
+    ├── sire_autenticacion/     # Gestión OAuth 2.0 (Clave SOL + Client ID), tokens y ambientes
+    ├── sire_cliente/           # Cliente HTTP asíncrono sobre Reqwest/Tokio con backoff y reintentos
+    ├── sire_catalogos/         # Tablas y catálogos oficiales SUNAT (Tipos doc, comprobantes, monedas, etc.)
+    ├── sire_rce/               # Registro de Compras Electrónico (Nacional y No Domiciliados)
+    ├── sire_rvie/              # Registro de Ventas e Ingresos Electrónico
+    ├── sire_tickets/           # Gestión asíncrona de tickets de proceso y descargas masivas
+    └── sire_errores/           # Jerarquía tipada de errores con thiserror
 ```
 
-### 3.1. Módulos Principales (Planificados y en Evolución)
+### 3.1. Módulos Principales de la Librería
 
-1. **`auth` (Autenticación y Autorización):**
-   - Implementa el flujo OAuth 2.0 requerido por SUNAT utilizando `client_id`, `client_secret`, RUC del contribuyente, usuario SOL y clave SOL.
-   - Cacheo en memoria y refresco automático del Bearer token antes de su caducidad.
+1. **`sire_autenticacion` (Gestión de Identidad y Ambientes):**
+   - `SireAmbiente`: Configuración de URLs de destino (`Produccion`, `PruebasBeta`, `Personalizado`).
+   - `SireCredenciales`: Manejo seguro de `client_id`, `client_secret`, `ruc`, `usuario_sol` y `clave_sol`.
+   - `SireToken`: Almacenamiento del token Bearer con cálculo de tiempo de expiración y auto-refresco asíncrono con `RwLock`.
 
-2. **`client` (Cliente HTTP Asíncrono):**
-   - Configuración base del cliente HTTP con cabeceras requeridas por SUNAT (`Content-Type: application/json`, `Authorization: Bearer <token>`).
-   - Gestión de límites de tasa (*rate-limiting*) y reintentos automáticos con retroceso exponencial (*exponential backoff*).
+2. **`sire_cliente` (Capa de Comunicación Asíncrona):**
+   - `SireCliente`: Cliente HTTP construido sobre `reqwest::Client` y `tokio`.
+   - Inyección automática de cabeceras de autorización (`Authorization: Bearer <token>`) y metadatos.
+   - Políticas de reintento ante fallos transitorios de red o saturación de SUNAT.
 
-3. **`models` (Dominio SIRE):**
-   - **RCE (Registro de Compras Electrónico):** Consulta y gestión de la propuesta de compras, aceptación, complementación o reemplazo de propuesta.
-   - **RVIE (Registro de Ventas e Ingresos Electrónico):** Consulta y gestión de la propuesta de ventas e ingresos.
-   - **Tickets Asíncronos:** Consulta de estado de tickets de procesamiento masivo emitidos por SUNAT y descarga de archivos de respuesta en formato comprimido (ZIP / CSV / TXT).
+3. **`sire_catalogos` (Catálogos Oficiales de SUNAT para SIRE):**
+   - Implementación exhaustiva y tipada de las tablas maestras de SUNAT:
+     - `SireCatalogo01TipoDocumentoIdentidad` (DNI, RUC, Pasaporte, Cédula Diplomática, etc.)
+     - `SireCatalogo02TipoComprobante` (Factura, Boleta, Nota de Crédito, Recibo por Honorarios, etc.)
+     - `SireCatalogo03Moneda` (PEN, USD, EUR, etc. según ISO 4217)
+     - `SireCatalogo04Pais` (Códigos de país según ISO 3166-1)
+     - `SireCatalogo05Aduana` (Dependencias aduaneras de SUNAT)
+     - `SireCatalogo11TipoAfectacionIgv` (Gravado, Exonerado, Inafecto, Exportación)
+     - `SireCatalogo24TipoOperacion` (Operaciones internas, exportaciones)
+     - `SireEstadoPropuesta` y `SireEstadoTicket` (Códigos de estado en respuestas del SIRE)
 
-4. **`error` (Manejo Centralizado de Errores):**
-   - Enumeración exhaustiva de posibles fallos: errores de red, expiración de credenciales, respuestas de validación tributaria devueltas por SUNAT, errores de deserialización y descompresión de archivos.
+4. **`sire_rvie` (Registro de Ventas e Ingresos Electrónico):**
+   - Estructuras para Comprobantes de Venta (`SireComprobanteVenta`, montos en `Decimal`).
+   - Gestión de propuestas: consulta de propuesta, aceptación de propuesta, reemplazo de propuesta mediante carga de archivo plano/ZIP, inclusión/exclusión de documentos.
+
+5. **`sire_rce` (Registro de Compras Electrónico):**
+   - Submódulo Nacional (`sire_rce_nacional`) y No Domiciliados (`sire_rce_no_domiciliados`).
+   - Modelado de las casillas tributarias (adquisiciones gravadas con derecho a crédito fiscal, operaciones no gravadas, etc.).
+   - Consulta, complementación y reemplazo de la propuesta de compras.
+
+6. **`sire_tickets` (Gestión de Procesos Asíncronos y Descargas):**
+   - Monitoreo del ciclo de vida de tickets de SUNAT con polling asíncrono configurable (`SireConsultaTicket`).
+   - Descarga de archivos masivos generados por SUNAT (descompresión ZIP en memoria o disco y parseo a registros tipados).
+
+7. **`sire_errores` (Manejo de Errores Tipados):**
+   - `SireError`: Enum que agrupa errores de autenticación, errores de red, respuestas HTTP no exitosas de SUNAT, errores de validación local y fallos de deserialización.
 
 ---
 

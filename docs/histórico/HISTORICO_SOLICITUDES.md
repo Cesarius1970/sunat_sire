@@ -112,6 +112,22 @@ Este documento registra de manera cronológica y secuencial todas las interaccio
   1. **Regla de Nomenclatura e Idioma:** Se incorporó formalmente en el manual técnico el español como idioma oficial y los prefijos `Sire`/`SIRE` (PascalCase para estructuras/tipos/traits) y `sire_` (snake_case para funciones/módulos), salvo en los campos y contratos donde la API de SUNAT requiera sus propios identificadores específicos (los cuales se gestionan con atributos de mapeo de serialización).
   2. **Análisis de la API SUNAT y Prohibición de Punto Flotante:** Se analizó la especificación técnica de SUNAT (RS 000112-2021/SUNAT y RS 000040-2022/SUNAT). La regla de prohibición de coma flotante (`f32`/`f64`) está **plenamente respaldada y es mandatoria**: SUNAT exige cuadres aritméticos al céntimo exacto en importes tributarios y 3 decimales en tipo de cambio. La inexactitud binaria del estándar IEEE 754 genera errores de redondeo que causan el rechazo de comprobantes/propuestas en el SIRE. Se adoptó formalmente el uso exclusivo de `rust_decimal::Decimal` para toda operación y almacenamiento monetario.
 
+---
+
+## Interacción #9
+- **Fecha / Hora:** 2026-09-11 10:55:36
+- **Solicitud del usuario:**
+  ```text
+  /GRILL-ME Analiza la web "https://cpe.sunat.gob.pe/". Quiero que se implemente esta librería de manera que permita generar e interactuar (enviar documentos y recibir notificaciones, tanto en producción como en pruebas) según lo declarado en esa web. Limita el desarrollo en investigación a SIRE no planifiques ni desarrolles para CPE u otros similares.Estructura los módulos que debe tener esta librería para implementar la generación de SIRE según el estándar de la SUNAT. Prepara las declaraciones e interfaces de manera que sea fácil el implementar los cambios que la SUNAT publique. Emplea el mayor detalle en esta generación, emplea la mayor fidelidad con el API de SUNAT e implementa los catálogos con la mayor cantidad de datos posibles.
+  ```
+- **Resumen / Respuesta:**
+  1. **Análisis Web y Acotación a SIRE:** Se investigó la documentación técnica de `cpe.sunat.gob.pe` aislando estrictamente la especificación del SIRE (RVIE y RCE), omitiendo emisión de comprobantes electrónicos (CPE). Se identificaron los flujos de autenticación OAuth 2.0 (SOL), servicios REST de consulta/aceptación/reemplazo de propuestas, gestión asíncrona de tickets y subida masiva de archivos planos/ZIP.
+  2. **Estructura Modular Propuesta:** Se definieron los módulos con prefijos `sire_` y modelos `Sire*`: `sire_autenticacion`, `sire_cliente`, `sire_catalogos` (exhaustivo), `sire_rvie`, `sire_rce`, `sire_tickets` y `sire_errores`.
+  3. **Diseño Resiliente a Cambios Normativos:** Uso de Traits de serialización/validación de estructuras de intercambio desacopladas del cliente REST.
+  4. **Sesión / Grill-Me:** Se plantearon las preguntas críticas de alineación (estrategia de subida de archivos pesados, persistencia de tokens, soporte dual API REST + archivos planos offline, y dependencias en `Cargo.toml`).
+  5. Se actualizó el `MANUAL_TECNICO.md`.
+
+
 
 
 
