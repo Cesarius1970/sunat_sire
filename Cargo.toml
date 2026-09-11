@@ -8,6 +8,6 @@ description = "Cliente y utilidades para la integración con el Sistema Integrad
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["sunat", "sire", "peru", "facturacion", "contabilidad"]
-categories = ["api-bindings", "web-programming"]
+categories = ["api-bindings", "web-programming", "finance"]
 
 [dependencies]
