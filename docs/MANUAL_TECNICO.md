@@ -39,6 +39,21 @@ El desarrollo de `sunat_sire` se rige de manera obligatoria por los siguientes m
 - **Conventional Commits:** Formato de mensajes con prefijos estandarizados (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, etc.).
 - **Nomenclatura de ramas:** `feature/*`, `bugfix/*`, `chore/*`, `docs/*`.
 
+### 2.5. Convención Lingüística y Nomenclatura con Prefijos
+- **Idioma del proyecto:** El idioma oficial para el código fuente interno, nombres de tipos, módulos, métodos, documentación y pruebas es el **español**.
+- **Uso obligatorio de prefijos:**
+  - Tipos, estructuras, enumeraciones y traits adoptan el prefijo `Sire` o `SIRE` (ej. `SireCliente`, `SireConfiguracion`, `SireTicket`, `SireError`).
+  - Módulos y funciones adoptan el prefijo `sire_` en minúsculas (*snake_case*) cuando corresponda a la API pública de la librería (ej. `sire_autenticar`, `sire_compras`).
+  - **Condición de excepción de API:** Esta nomenclatura se aplica siempre que no colisione, sobreescriba o altere el contrato estricto de la API de SUNAT. Los campos de payloads JSON y respuestas directas de SUNAT (ej. `numTicket`, `codTipoDoc`, `mtoTotal`) preservan los identificadores exigidos por el fisco o se mapean transparentemente mediante atributos `#[serde(rename = "...")]`.
+
+### 2.6. Prohibición de Punto Flotante para Moneda y Análisis de la API SUNAT
+- **Regla Estricta:** Se prohíbe taxativamente el uso de tipos de coma flotante binaria (`f32`, `f64`) para representar, calcular o almacenar importes monetarios, bases imponibles, tributos o tipos de cambio.
+- **Análisis y Respaldo Técnico según la Especificación de SUNAT SIRE:**
+  - Las especificaciones del SIRE (Resoluciones de Superintendencia N.° 000112-2021/SUNAT, 000040-2022/SUNAT y sus anexos de estructuras RCE y RVIE) exigen precisión decimal fija exacta: 2 decimales para importes en moneda nacional/extranjera (Base Imponible, IGV, Total) y 3 decimales para el factor de tipo de cambio.
+  - El estándar IEEE 754 de coma flotante binaria (`f32`/`f64`) no puede representar de forma exacta la mayoría de fracciones decimales (por ejemplo, `0.1 + 0.2` resulta en `0.30000000000000004`).
+  - Las matrices de validación de SUNAT validan la consistencia aritmética (`BI * 0.18 == IGV`, `BI + IGV == Total`) al céntimo exacto. Un error de redondeo residual de coma flotante resulta en el rechazo del ticket o inconsistencias tributarias no subsanables.
+  - **Solución Estándar:** Se adopta de manera obligatoria la biblioteca `rust_decimal` (`Decimal`), la cual provee aritmética en base 10 de 128 bits de precisión exacta sin pérdidas ni redondeos espurios, compatible con serialización y deserialización directa a JSON.
+
 ---
 
 ## 3. Arquitectura del Sistema

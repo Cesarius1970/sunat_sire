@@ -98,5 +98,20 @@ Este documento registra de manera cronológica y secuencial todas las interaccio
   2. Se redactó el manual técnico completo en `docs/MANUAL_TECNICO.md` abarcando información general, estándares (Karpathy, Rust Best Practices, Tokio Async), arquitectura modular (auth, client, models, error), diagramas de secuencia de integración con SUNAT SIRE, y comandos de verificación.
   3. Se ejecutaron y verificaron pruebas unitarias, doc-tests y la compilación de documentación HTML con `cargo doc`.
 
+---
+
+## Interacción #8
+- **Fecha / Hora:** 2026-09-11 10:54:45
+- **Solicitud del usuario:**
+  ```text
+  Pon como regla que debe usarse el idioma español y se debe usar el prefijo "SIRE" o "sire_" según corresponda en la nomenclatura de objetos, siempre y cuando no colisione o altere la gestión con el API de SUNAT.
+
+  Pon como regla que no se puede usar decimales de punto flotante para calcular o almacenar valores de moneda. Analizar la declaración de la API SUNAT para respaldar o ignorar esta regla.
+  ```
+- **Resumen / Respuesta:**
+  1. **Regla de Nomenclatura e Idioma:** Se incorporó formalmente en el manual técnico el español como idioma oficial y los prefijos `Sire`/`SIRE` (PascalCase para estructuras/tipos/traits) y `sire_` (snake_case para funciones/módulos), salvo en los campos y contratos donde la API de SUNAT requiera sus propios identificadores específicos (los cuales se gestionan con atributos de mapeo de serialización).
+  2. **Análisis de la API SUNAT y Prohibición de Punto Flotante:** Se analizó la especificación técnica de SUNAT (RS 000112-2021/SUNAT y RS 000040-2022/SUNAT). La regla de prohibición de coma flotante (`f32`/`f64`) está **plenamente respaldada y es mandatoria**: SUNAT exige cuadres aritméticos al céntimo exacto en importes tributarios y 3 decimales en tipo de cambio. La inexactitud binaria del estándar IEEE 754 genera errores de redondeo que causan el rechazo de comprobantes/propuestas en el SIRE. Se adoptó formalmente el uso exclusivo de `rust_decimal::Decimal` para toda operación y almacenamiento monetario.
+
+
 
 
