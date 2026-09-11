@@ -6,6 +6,7 @@ rust-version = "1.85"
 authors = ["César A Vergara Buenaventura <cesarvergarab@gmail.com>"]
 description = "Cliente y utilidades para la integración con el Sistema Integrado de Registros Electrónicos (SIRE) de SUNAT (Perú)."
 readme = "README.md"
+documentation = "https://docs.rs/sunat_sire"
 license = "MIT OR Apache-2.0"
 keywords = ["sunat", "sire", "peru", "facturacion", "contabilidad"]
 categories = ["api-bindings", "web-programming", "finance"]
