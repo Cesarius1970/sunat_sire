@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Arquitectura de Integración sunat_sire",
+    "title": "Arquitectura de Integración sunat_sire (v0.2.0)",
     "output": "arquitectura-sire.html",
     "quality_profile": "showcase",
     "views": [
@@ -17,6 +17,12 @@
         "label": "Autenticación OAuth",
         "focus": ["auth", "sunat_oauth", "cliente"],
         "note": "Ciclo de vida del token Bearer en RAM con renovación anticipada."
+      },
+      {
+        "id": "cargas-tus",
+        "label": "Cargas Resumibles TUS",
+        "focus": ["cliente", "tus", "sunat_api"],
+        "note": "Transmisión de grandes volúmenes mediante protocolo TUS 1.0.0 (POST/HEAD/PATCH)."
       },
       {
         "id": "modulos-libros",
@@ -41,7 +47,7 @@
       "label": "SireCliente",
       "sublabel": "Reqwest + Rustls",
       "brand": "rust",
-      "pos": [310, 200],
+      "pos": [300, 200],
       "size": [160, 60]
     },
     {
@@ -50,39 +56,48 @@
       "label": "SireGestorToken",
       "sublabel": "OAuth 2.0 (RAM)",
       "tag": "RwLock",
-      "pos": [310, 60],
+      "pos": [300, 60],
       "size": [160, 60]
     },
     {
       "id": "rvie",
       "type": "backend",
       "label": "SireRvie",
-      "sublabel": "Ventas (ZIP + SHA-256)",
-      "pos": [210, 340],
-      "size": [150, 60]
+      "sublabel": "Ventas (ZIP + SHA)",
+      "pos": [150, 340],
+      "size": [140, 60]
     },
     {
       "id": "rce",
       "type": "backend",
       "label": "SireRce",
-      "sublabel": "Compras (ZIP + SHA-256)",
-      "pos": [390, 340],
-      "size": [150, 60]
+      "sublabel": "Compras (ZIP + SHA)",
+      "pos": [310, 340],
+      "size": [140, 60]
+    },
+    {
+      "id": "tus",
+      "type": "backend",
+      "label": "SireTus",
+      "sublabel": "Cargas Resumibles",
+      "tag": "Chunk 5MB",
+      "pos": [490, 340],
+      "size": [140, 60]
     },
     {
       "id": "tickets",
       "type": "backend",
       "label": "SireTickets",
       "sublabel": "Sondeo Asíncrono",
-      "pos": [570, 340],
-      "size": [150, 60]
+      "pos": [680, 340],
+      "size": [140, 60]
     },
     {
       "id": "sunat_oauth",
       "type": "security",
       "label": "SUNAT OAuth 2.0",
       "sublabel": "api-seguridad.sunat.gob.pe",
-      "pos": [770, 60],
+      "pos": [790, 60],
       "size": [180, 60]
     },
     {
@@ -90,7 +105,7 @@
       "type": "cloud",
       "label": "SUNAT SIRE REST API",
       "sublabel": "api-sire.sunat.gob.pe",
-      "pos": [770, 200],
+      "pos": [790, 200],
       "size": [180, 60]
     }
   ],
@@ -98,7 +113,7 @@
     {
       "kind": "region",
       "label": "Crate sunat_sire (Rust / Tokio)",
-      "wraps": ["auth", "cliente", "rvie", "rce", "tickets"]
+      "wraps": ["auth", "cliente", "rvie", "rce", "tus", "tickets"]
     },
     {
       "kind": "region",
@@ -149,9 +164,10 @@
       "toSide": "top"
     },
     {
-      "id": "cliente-a-tickets",
+      "id": "cliente-a-tus",
       "from": "cliente",
-      "to": "tickets",
+      "to": "tus",
+      "label": "Upload masivo",
       "fromSide": "bottom",
       "toSide": "top"
     },
@@ -166,6 +182,15 @@
       "labelDy": -20
     },
     {
+      "id": "tus-a-sunat-api",
+      "from": "tus",
+      "to": "sunat_api",
+      "label": "TUS PATCH Chunks",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
       "id": "tickets-a-sunat-api",
       "from": "tickets",
       "to": "sunat_api",
@@ -178,20 +203,20 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "Crate sunat_sire",
+      "title": "Crate sunat_sire v0.2.0",
       "items": [
         "Cliente asíncrono Tokio + Reqwest con rustls",
-        "Gestor de tokens en RAM con auto-refresco anticipado",
+        "Gestor de tokens en RAM con auto-refresco",
         "Aritmética decimal exacta con rust_decimal"
       ]
     },
     {
       "dot": "emerald",
-      "title": "Generación RVIE / RCE",
+      "title": "Generación y Cargas TUS",
       "items": [
         "Estructura plana oficial delimitada por pipe (|)",
-        "Empaquetado ZIP con nomenclatura LE{RUC}{Periodo}...",
-        "Cálculo automático de digestión SHA-256 (64 hex)"
+        "Empaquetado ZIP con hash SHA-256 (64 hex)",
+        "Cargas resumibles TUS 1.0.0 con chunks de 5MB"
       ]
     },
     {
@@ -199,8 +224,8 @@
       "title": "Servicios SUNAT",
       "items": [
         "Autenticación OAuth 2.0 con Clave SOL",
-        "Consulta, aceptación y reemplazo masivo de propuestas",
-        "Monitoreo asíncrono de tickets y descargas"
+        "Propuestas, tickets y reemplazo masivo TUS",
+        "Publicado oficialmente en crates.io"
       ]
     }
   ]

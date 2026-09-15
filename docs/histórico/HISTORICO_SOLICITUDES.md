@@ -226,6 +226,22 @@ Este documento registra de manera cronológica y secuencial todas las interaccio
   4. Se ejecutó `git push origin main` mediante SSH hacia el repositorio remoto en GitHub (`git@github.com:Cesarius1970/sunat_sire.git`).
   5. Se ejecutó `cargo publish` publicando exitosamente el crate `sunat_sire` v0.2.0 en el registro oficial `crates.io` (disponible en https://crates.io/crates/sunat_sire).
 
+---
+
+## Interacción #16
+- **Fecha / Hora:** 2026-09-15 13:10:35
+- **Solicitud del usuario:**
+  ```text
+  /archify
+  ```
+- **Resumen / Respuesta:**
+  Se actualizó y entregó el diagrama de arquitectura interactivo y autocontenido con Archify para reflejar los cambios de la versión `v0.2.0` (soporte TUS):
+  1. Se actualizó la especificación en `docs/arquitectura-sire.architecture.json` incorporando el componente `SireTus`, su flujo de fragmentos `PATCH`, y la vista guiada `Cargas Resumibles TUS`.
+  2. Se ejecutó la validación estricta (`archify validate`) superando los 9 controles con 0 errores y 0 advertencias.
+  3. Se entregó el artefacto interactivo `docs/arquitectura-sire.html` (`archify deliver`).
+  4. Se verificó con `visual-check` en resoluciones 1440x900, 1600x1000, 1920x1080 y 2048x1320 (temas claro y oscuro) con desbordamiento cero.
+
+
 
 
 
