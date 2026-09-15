@@ -10,8 +10,8 @@ homepage = "https://github.com/Cesarius1970/sunat_sire"
 repository = "https://github.com/Cesarius1970/sunat_sire"
 documentation = "https://docs.rs/sunat_sire"
 license = "MIT OR Apache-2.0"
-keywords = ["sunat", "sire", "peru", "facturacion", "contabilidad"]
-categories = ["api-bindings", "web-programming", "finance","tus"]
+keywords = ["sunat", "sire", "peru", "tus", "contabilidad"]
+categories = ["api-bindings", "web-programming", "finance"]
 exclude = [
     "docs/arquitectura-sire.visual-check.*",
 ]
