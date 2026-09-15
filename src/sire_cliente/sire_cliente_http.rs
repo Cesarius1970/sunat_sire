@@ -176,4 +176,35 @@ impl SireCliente {
 
         Ok(respuesta)
     }
+
+    /// Ejecuta una subida de archivo masiva y resumible utilizando el protocolo TUS 1.0.0.
+    #[instrument(skip(self, bytes_archivo, callback_progreso), level = "info")]
+    pub async fn ejecutar_upload_tus<F>(
+        &self,
+        ruta_servicio: &str,
+        bytes_archivo: &[u8],
+        metadatos: &crate::sire_tus::SireMetadatosTus,
+        configuracion_tus: Option<crate::sire_tus::SireConfiguracionTus>,
+        callback_progreso: Option<F>,
+    ) -> SireResultado<crate::sire_tus::SireRespuestaTus>
+    where
+        F: FnMut(crate::sire_tus::SireProgresoTus),
+    {
+        let token = self.obtener_token().await?;
+        let url_endpoint = self.configuracion.ambiente.construir_url_api(ruta_servicio);
+        let config = configuracion_tus.unwrap_or_default();
+        let cliente_tus = crate::sire_tus::SireClienteTus::nuevo(self.cliente_http.clone(), config);
+
+        cliente_tus
+            .subir_archivo(
+                &url_endpoint,
+                &token,
+                bytes_archivo,
+                metadatos,
+                callback_progreso,
+            )
+            .await
+    }
 }
+
+

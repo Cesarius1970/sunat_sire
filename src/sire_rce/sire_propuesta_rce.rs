@@ -90,3 +90,38 @@ pub async fn sire_reemplazar_propuesta_rce(
     let ticket: SireTicket = respuesta.json().await.map_err(SireError::Red)?;
     Ok(ticket)
 }
+
+/// Reemplaza la propuesta de compras (RCE) utilizando el protocolo TUS 1.0.0 para cargas resumibles masivas.
+pub async fn sire_reemplazar_propuesta_rce_tus<F>(
+    cliente: &SireCliente,
+    ruc: &str,
+    periodo: &str,
+    comprobantes: &[SireComprobanteCompra],
+    configuracion_tus: Option<crate::sire_tus::SireConfiguracionTus>,
+    callback_progreso: Option<F>,
+) -> SireResultado<crate::sire_tus::SireRespuestaTus>
+where
+    F: FnMut(crate::sire_tus::SireProgresoTus),
+{
+    let plano = sire_generar_archivo_plano_rce(comprobantes);
+    let (nombre_zip, bytes_zip, sha256_hex) = sire_empaquetar_zip_rce(ruc, periodo, &plano)?;
+
+    let ruta = format!(
+        "/v1/contribuyente/migeigv/libros/rvierce/propuesta/web/propuesta/{}/reemplazarcompras/upload",
+        periodo.trim()
+    );
+
+    let metadatos = crate::sire_tus::SireMetadatosTus::nuevo(&nombre_zip, &sha256_hex, ruc, periodo);
+
+    cliente
+        .ejecutar_upload_tus(
+            &ruta,
+            &bytes_zip,
+            &metadatos,
+            configuracion_tus,
+            callback_progreso,
+        )
+        .await
+}
+
+

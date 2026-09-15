@@ -78,6 +78,7 @@ sunat_sire/
     ├── sire_rce/               # Registro de Compras Electrónico (Nacional y No Domiciliados)
     ├── sire_rvie/              # Registro de Ventas e Ingresos Electrónico
     ├── sire_tickets/           # Gestión asíncrona de tickets de proceso y descargas masivas
+    ├── sire_tus/               # Cargas masivas y resumibles mediante protocolo TUS 1.0.0
     └── sire_errores/           # Jerarquía tipada de errores con thiserror
 ```
 
@@ -117,8 +118,14 @@ sunat_sire/
    - Monitoreo del ciclo de vida de tickets de SUNAT con polling asíncrono configurable (`SireConsultaTicket`).
    - Descarga de archivos masivos generados por SUNAT (descompresión ZIP en memoria o disco y parseo a registros tipados).
 
-7. **`sire_errores` (Manejo de Errores Tipados):**
-   - `SireError`: Enum que agrupa errores de autenticación, errores de red, respuestas HTTP no exitosas de SUNAT, errores de validación local y fallos de deserialización.
+7. **`sire_tus` (Cargas Resumibles Masivas TUS 1.0.0):**
+   - Implementación del protocolo abierto TUS 1.0.0 (`SireClienteTus`, `SireConfiguracionTus`).
+   - Formateo de cabeceras `Upload-Metadata` en Base64 (`SireMetadatosTus`).
+   - Orquestación en tres fases: creación (`POST`), consulta de offset (`HEAD`), y transmisión de fragmentos (`PATCH`).
+   - Reanudación automática ante interrupciones de red y emisión de progreso en tiempo real (`SireProgresoTus`).
+
+8. **`sire_errores` (Manejo de Errores Tipados):**
+   - `SireError`: Enum que agrupa errores de autenticación, errores de red, respuestas HTTP no exitosas de SUNAT, errores de validación local, fallos TUS y fallos de deserialización.
 
 ---
 

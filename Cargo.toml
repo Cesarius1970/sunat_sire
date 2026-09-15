@@ -1,6 +1,6 @@
 [package]
 name = "sunat_sire"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["César A Vergara Buenaventura <cesarvergarab@gmail.com>"]
@@ -23,6 +23,7 @@ tracing = "0.1"
 sha2 = "0.10"
 zip = { version = "2.2", default-features = false, features = ["deflate"] }
 chrono = { version = "0.4", features = ["serde"] }
+base64 = "0.22"
 
 [dev-dependencies]
 tokio-test = "0.4"

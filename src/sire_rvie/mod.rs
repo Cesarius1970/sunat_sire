@@ -14,5 +14,6 @@ pub use sire_generador_rvie::{sire_empaquetar_zip_rvie, sire_generar_archivo_pla
 pub use sire_modelo_rvie::SireComprobanteVenta;
 pub use sire_propuesta_rvie::{
     sire_aceptar_propuesta_rvie, sire_consultar_propuesta_rvie, sire_reemplazar_propuesta_rvie,
-    SireRespuestaPropuestaRvie,
+    sire_reemplazar_propuesta_rvie_tus, SireRespuestaPropuestaRvie,
 };
+

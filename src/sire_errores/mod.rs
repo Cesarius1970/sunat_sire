@@ -54,4 +54,9 @@ pub enum SireError {
     /// Error en conversión o cálculo decimal monetario.
     #[error("Error de precisión decimal: {0}")]
     Decimal(#[from] rust_decimal::Error),
+
+    /// Error en operaciones del protocolo TUS (cargas masivas resumibles).
+    #[error("Error en protocolo TUS: {0}")]
+    Tus(String),
 }
+

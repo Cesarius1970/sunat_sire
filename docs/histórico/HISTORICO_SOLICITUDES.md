@@ -192,6 +192,26 @@ Este documento registra de manera cronológica y secuencial todas las interaccio
   3. Entrega mediante `archify deliver` generando el artefacto interactivo `docs/arquitectura-sire.html`.
   4. Verificación visual automatizada (`visual-check`) superando las resoluciones de escritorio (1440x900, 1600x1000, 1920x1080 y 2048x1320) en temas claro y oscuro sin desbordamiento.
 
+---
+
+## Interacción #14
+- **Fecha / Hora:** 2026-09-15 12:05:24
+- **Solicitud del usuario:**
+  ```text
+  /plan planifica la implementacion del soporte TUS segu la espcificacion de SUNAT.
+  ```
+- **Resumen / Respuesta:**
+  1. Se elaboró y aprobó el artefacto de planificación detallada `plan_soporte_tus.md` para el soporte del protocolo abierto TUS 1.0.0 (Open Protocol for Resumable File Uploads) de SUNAT SIRE.
+  2. Se añadió la dependencia `base64 = "0.22"` en `Cargo.toml` para codificación de cabeceras `Upload-Metadata` y la variante `SireError::Tus(String)`.
+  3. Se creó el módulo `sire_tus` con sus componentes:
+     - `SireMetadatosTus`: modelado y serialización Base64 para la cabecera `Upload-Metadata`.
+     - `SireConfiguracionTus`: configuración de tamaño de chunk (5 MB por defecto), reintentos con retroceso exponencial y timeouts.
+     - `SireProgresoTus`: cálculo y reporte de progreso de transferencia en tiempo real.
+     - `SireClienteTus`: implementación asíncrona de las 3 fases TUS (creación `POST`, consulta `HEAD` y transmisión `PATCH` de fragmentos con `application/offset+octet-stream`).
+  4. Se integró `ejecutar_upload_tus` en `SireCliente` y las funciones de reemplazo masivo `sire_reemplazar_propuesta_rvie_tus` y `sire_reemplazar_propuesta_rce_tus` en `sire_rvie` y `sire_rce`.
+  5. Se verificó con `cargo test` (4 pruebas unitarias aprobadas al 100%), `cargo clippy --all-targets --all-features -- -D warnings` limpio y generación de documentación con `cargo doc`.
+
+
 
 
 

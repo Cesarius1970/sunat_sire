@@ -18,6 +18,7 @@
 //! - [`sire_rvie`]: Registro de Ventas e Ingresos Electrónico (modelos con `rust_decimal::Decimal`, generador plano, empaquetador ZIP y API).
 //! - [`sire_rce`]: Registro de Compras Electrónico (compras nacionales, casillas de crédito fiscal en `Decimal` y servicios API).
 //! - [`sire_tickets`]: Monitoreo de procesos en segundo plano de SUNAT mediante sondeos asíncronos (*polling*) no bloqueantes.
+//! - [`sire_tus`]: Cargas masivas y resumibles de archivos mediante el protocolo abierto TUS 1.0.0.
 //! - [`sire_errores`]: Jerarquía fuertemente tipada de errores basada en `thiserror`.
 
 #![warn(missing_docs)]
@@ -29,14 +30,24 @@ pub mod sire_errores;
 pub mod sire_rce;
 pub mod sire_rvie;
 pub mod sire_tickets;
+pub mod sire_tus;
 
 // Re-exportaciones de conveniencia para la raíz del crate
 pub use sire_autenticacion::{SireAmbiente, SireCredenciales, SireGestorToken, SireToken};
 pub use sire_cliente::{SireCliente, SireConfiguracion};
 pub use sire_errores::{SireError, SireResultado};
-pub use sire_rce::{SireComprobanteCompra, sire_empaquetar_zip_rce, sire_generar_archivo_plano_rce};
-pub use sire_rvie::{SireComprobanteVenta, sire_empaquetar_zip_rvie, sire_generar_archivo_plano_rvie};
+pub use sire_rce::{
+    sire_empaquetar_zip_rce, sire_generar_archivo_plano_rce, sire_reemplazar_propuesta_rce_tus,
+    SireComprobanteCompra,
+};
+pub use sire_rvie::{
+    sire_empaquetar_zip_rvie, sire_generar_archivo_plano_rvie, sire_reemplazar_propuesta_rvie_tus,
+    SireComprobanteVenta,
+};
 pub use sire_tickets::{SireArchivoRespuesta, SireTicket, sire_consultar_ticket, sire_esperar_ticket};
+pub use sire_tus::{
+    SireClienteTus, SireConfiguracionTus, SireMetadatosTus, SireProgresoTus, SireRespuestaTus,
+};
 
 #[cfg(test)]
 mod tests {
@@ -136,4 +147,29 @@ mod tests {
         assert!(!bytes_zip.is_empty());
         assert_eq!(hash_sha256.len(), 64);
     }
+
+    #[test]
+    fn tus_debe_formatear_metadatos_y_calcular_progreso() {
+        let metadatos = SireMetadatosTus::nuevo(
+            "LE2060000000120260900140400021112.zip",
+            "a5b42d07ebc6c885e9270ed5bd3b8254cb6d13804837fd0f59ad4efa1c4fc35c",
+            "20600000001",
+            "202609",
+        );
+
+        let cabecera = metadatos.a_cabecera_upload_metadata();
+        assert!(cabecera.contains("filename "));
+        assert!(cabecera.contains("hash "));
+        assert!(cabecera.contains("numRuc "));
+        assert!(cabecera.contains("perTributario "));
+
+        let config = SireConfiguracionTus::nuevo().con_tamano_chunk_mb(5);
+        assert_eq!(config.tamano_chunk_bytes, 5 * 1024 * 1024);
+
+        let progreso = SireProgresoTus::calcular(5 * 1024 * 1024, 10 * 1024 * 1024, 1, 2);
+        assert_eq!(progreso.porcentaje, 50.0);
+        assert_eq!(progreso.fragmento_actual, 1);
+        assert_eq!(progreso.total_fragmentos, 2);
+    }
 }
+

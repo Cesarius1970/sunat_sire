@@ -14,5 +14,6 @@ pub use sire_generador_rce::{sire_empaquetar_zip_rce, sire_generar_archivo_plano
 pub use sire_modelo_rce::SireComprobanteCompra;
 pub use sire_propuesta_rce::{
     sire_aceptar_propuesta_rce, sire_consultar_propuesta_rce, sire_reemplazar_propuesta_rce,
-    SireRespuestaPropuestaRce,
+    sire_reemplazar_propuesta_rce_tus, SireRespuestaPropuestaRce,
 };
+
