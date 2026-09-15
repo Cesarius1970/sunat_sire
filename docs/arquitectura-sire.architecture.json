@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura de Integración sunat_sire",
+    "output": "arquitectura-sire.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "flujo-principal",
+        "label": "Flujo Principal",
+        "focus": ["app", "cliente", "sunat_api"],
+        "note": "Peticiones desde la aplicación cliente hacia la API REST del SIRE."
+      },
+      {
+        "id": "autenticacion",
+        "label": "Autenticación OAuth",
+        "focus": ["auth", "sunat_oauth", "cliente"],
+        "note": "Ciclo de vida del token Bearer en RAM con renovación anticipada."
+      },
+      {
+        "id": "modulos-libros",
+        "label": "Módulos RVIE, RCE y Tickets",
+        "focus": ["cliente", "rvie", "rce", "tickets", "sunat_api"],
+        "note": "Generación de registros contables, empaquetado ZIP y sondeo asíncrono."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "app",
+      "type": "external",
+      "label": "ERP / App Cliente",
+      "sublabel": "Sistema Contable",
+      "pos": [40, 200],
+      "size": [150, 60]
+    },
+    {
+      "id": "cliente",
+      "type": "backend",
+      "label": "SireCliente",
+      "sublabel": "Reqwest + Rustls",
+      "brand": "rust",
+      "pos": [310, 200],
+      "size": [160, 60]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "SireGestorToken",
+      "sublabel": "OAuth 2.0 (RAM)",
+      "tag": "RwLock",
+      "pos": [310, 60],
+      "size": [160, 60]
+    },
+    {
+      "id": "rvie",
+      "type": "backend",
+      "label": "SireRvie",
+      "sublabel": "Ventas (ZIP + SHA-256)",
+      "pos": [210, 340],
+      "size": [150, 60]
+    },
+    {
+      "id": "rce",
+      "type": "backend",
+      "label": "SireRce",
+      "sublabel": "Compras (ZIP + SHA-256)",
+      "pos": [390, 340],
+      "size": [150, 60]
+    },
+    {
+      "id": "tickets",
+      "type": "backend",
+      "label": "SireTickets",
+      "sublabel": "Sondeo Asíncrono",
+      "pos": [570, 340],
+      "size": [150, 60]
+    },
+    {
+      "id": "sunat_oauth",
+      "type": "security",
+      "label": "SUNAT OAuth 2.0",
+      "sublabel": "api-seguridad.sunat.gob.pe",
+      "pos": [770, 60],
+      "size": [180, 60]
+    },
+    {
+      "id": "sunat_api",
+      "type": "cloud",
+      "label": "SUNAT SIRE REST API",
+      "sublabel": "api-sire.sunat.gob.pe",
+      "pos": [770, 200],
+      "size": [180, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Crate sunat_sire (Rust / Tokio)",
+      "wraps": ["auth", "cliente", "rvie", "rce", "tickets"]
+    },
+    {
+      "kind": "region",
+      "label": "Servicios Web SUNAT (Perú)",
+      "wraps": ["sunat_oauth", "sunat_api"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "app-a-cliente",
+      "from": "app",
+      "to": "cliente",
+      "label": "Operaciones SIRE",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "cliente-a-auth",
+      "from": "cliente",
+      "to": "auth",
+      "label": "Token Bearer",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "auth-a-sunat-oauth",
+      "from": "auth",
+      "to": "sunat_oauth",
+      "label": "Clave SOL + Client ID",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "cliente-a-rvie",
+      "from": "cliente",
+      "to": "rvie",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "cliente-a-rce",
+      "from": "cliente",
+      "to": "rce",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "cliente-a-tickets",
+      "from": "cliente",
+      "to": "tickets",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "cliente-a-sunat-api",
+      "from": "cliente",
+      "to": "sunat_api",
+      "label": "HTTPS REST / Multipart",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "labelDy": -20
+    },
+    {
+      "id": "tickets-a-sunat-api",
+      "from": "tickets",
+      "to": "sunat_api",
+      "label": "Polling ticket",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Crate sunat_sire",
+      "items": [
+        "Cliente asíncrono Tokio + Reqwest con rustls",
+        "Gestor de tokens en RAM con auto-refresco anticipado",
+        "Aritmética decimal exacta con rust_decimal"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Generación RVIE / RCE",
+      "items": [
+        "Estructura plana oficial delimitada por pipe (|)",
+        "Empaquetado ZIP con nomenclatura LE{RUC}{Periodo}...",
+        "Cálculo automático de digestión SHA-256 (64 hex)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Servicios SUNAT",
+      "items": [
+        "Autenticación OAuth 2.0 con Clave SOL",
+        "Consulta, aceptación y reemplazo masivo de propuestas",
+        "Monitoreo asíncrono de tickets y descargas"
+      ]
+    }
+  ]
+}

@@ -66,6 +66,8 @@ sunat_sire/
 ├── README.md                   # Documentación general y presentación
 ├── docs/
 │   ├── MANUAL_TECNICO.md       # Arquitectura y manual técnico
+│   ├── arquitectura-sire.html  # Diagrama interactivo y autocontenido (Archify)
+│   ├── arquitectura-sire.architecture.json # Especificación tipada de arquitectura
 │   └── histórico/
 │       └── HISTORICO_SOLICITUDES.md # Registro cronológico de solicitudes y respuestas
 └── src/
