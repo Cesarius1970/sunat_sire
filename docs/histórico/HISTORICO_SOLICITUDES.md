@@ -211,6 +211,22 @@ Este documento registra de manera cronológica y secuencial todas las interaccio
   4. Se integró `ejecutar_upload_tus` en `SireCliente` y las funciones de reemplazo masivo `sire_reemplazar_propuesta_rvie_tus` y `sire_reemplazar_propuesta_rce_tus` en `sire_rvie` y `sire_rce`.
   5. Se verificó con `cargo test` (4 pruebas unitarias aprobadas al 100%), `cargo clippy --all-targets --all-features -- -D warnings` limpio y generación de documentación con `cargo doc`.
 
+---
+
+## Interacción #15
+- **Fecha / Hora:** 2026-09-15 12:51:40
+- **Solicitud del usuario:**
+  ```text
+  Modifica Cargo.toml de acuerdo alos ultimos cambios realizados. realiza el git push y publica el crate en crates.io
+  ```
+- **Resumen / Respuesta:**
+  1. Se actualizaron los metadatos de `Cargo.toml` (`repository`, `homepage`, descripción con soporte TUS y exclusión de capturas visuales pesadas).
+  2. Se actualizó `README.md` destacando el soporte para cargas masivas TUS 1.0.0.
+  3. Se confirmó y empaquetó el repositorio en git.
+  4. Se ejecutó `git push` hacia el repositorio remoto `origin/main` en GitHub (`https://github.com/Cesarius1970/sunat_sire.git`).
+  5. Se ejecutó `cargo publish` publicando la versión oficial en crates.io.
+
+
 
 
 

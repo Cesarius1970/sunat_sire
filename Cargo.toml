@@ -4,12 +4,18 @@ version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["César A Vergara Buenaventura <cesarvergarab@gmail.com>"]
-description = "Cliente y utilidades para la integración con el Sistema Integrado de Registros Electrónicos (SIRE) de SUNAT (Perú)."
+description = "Cliente y utilidades para la integración con el Sistema Integrado de Registros Electrónicos (SIRE) de SUNAT (Perú) con soporte TUS."
 readme = "README.md"
+homepage = "https://github.com/Cesarius1970/sunat_sire"
+repository = "https://github.com/Cesarius1970/sunat_sire"
 documentation = "https://docs.rs/sunat_sire"
 license = "MIT OR Apache-2.0"
 keywords = ["sunat", "sire", "peru", "facturacion", "contabilidad"]
-categories = ["api-bindings", "web-programming", "finance"]
+categories = ["api-bindings", "web-programming", "finance","tus"]
+exclude = [
+    "docs/arquitectura-sire.visual-check.*",
+]
+
 
 [dependencies]
 tokio = { version = "1.43", features = ["full"] }

@@ -6,6 +6,7 @@ Librería en Rust para la integración, consulta y gestión de información con 
 
 - Soporte para el Registro de Compras Electrónico (RCE).
 - Soporte para el Registro de Ventas e Ingresos Electrónico (RVIE).
+- Soporte para cargas masivas y resumibles mediante el protocolo abierto TUS 1.0.0.
 - Modelos de datos tipados y validaciones acordes a las especificaciones técnicas de SUNAT.
 - Operaciones asíncronas con soporte para el runtime Tokio.
 
