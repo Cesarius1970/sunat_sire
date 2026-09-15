@@ -220,11 +220,12 @@ Este documento registra de manera cronológica y secuencial todas las interaccio
   Modifica Cargo.toml de acuerdo alos ultimos cambios realizados. realiza el git push y publica el crate en crates.io
   ```
 - **Resumen / Respuesta:**
-  1. Se actualizaron los metadatos de `Cargo.toml` (`repository`, `homepage`, descripción con soporte TUS y exclusión de capturas visuales pesadas).
+  1. Se actualizaron los metadatos de `Cargo.toml` (`repository = "https://github.com/Cesarius1970/sunat_sire"`, `homepage`, descripción con soporte TUS, exclusión de capturas visuales pesadas de test y categorías válidas de crates.io).
   2. Se actualizó `README.md` destacando el soporte para cargas masivas TUS 1.0.0.
   3. Se confirmó y empaquetó el repositorio en git.
-  4. Se ejecutó `git push` hacia el repositorio remoto `origin/main` en GitHub (`https://github.com/Cesarius1970/sunat_sire.git`).
-  5. Se ejecutó `cargo publish` publicando la versión oficial en crates.io.
+  4. Se ejecutó `git push origin main` mediante SSH hacia el repositorio remoto en GitHub (`git@github.com:Cesarius1970/sunat_sire.git`).
+  5. Se ejecutó `cargo publish` publicando exitosamente el crate `sunat_sire` v0.2.0 en el registro oficial `crates.io` (disponible en https://crates.io/crates/sunat_sire).
+
 
 
 
